@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Staging layer for customer data with cleaning and validation"
+    columns:
+      - name: customer_id
+        description: "Unique customer identifier"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        description: "Customer email address"
+        tests:
+          - not_null
+          - unique
+      - name: registration_date
+        description: "Date when customer registered"
+        tests:
+          - not_null
+          
+  - name: stg_orders
+    description: "Staging layer for order data with cleaning and validation"
+    columns:
+      - name: order_id
+        description: "Unique order identifier"
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Foreign key to customers table"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: total_amount
+        description: "Total order amount"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1000000
+              
+  - name: fct_orders
+    description: "Fact table for order transactions (star schema)"
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: revenue
+        description: "Revenue from completed orders"
+        tests:
+          - not_null
+          
+  - name: dim_customers
+    description: "Customer dimension table with segmentation"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+
